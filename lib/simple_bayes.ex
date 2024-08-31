@@ -5,14 +5,14 @@ defmodule SimpleBayes do
             tokens_per_training: %{},
             opts: []
 
-  @model          :multinomial
-  @storage        :memory
-  @namespace      nil
-  @file_path      ""
+  @model :multinomial
+  @storage :memory
+  @namespace nil
+  @file_path ""
   @default_weight 1
-  @smoothing      0
-  @stem           false
-  @top            nil
+  @smoothing 0
+  @stem false
+  @top nil
   @stop_words ~w(
     a about above after again against all am an and any are aren't as at be
     because been before being below between both but by can't cannot could
@@ -30,23 +30,28 @@ defmodule SimpleBayes do
   )
 
   @storages %{
-    memory:      SimpleBayes.Storage.Memory,
+    memory: SimpleBayes.Storage.Memory,
     file_system: SimpleBayes.Storage.FileSystem,
-    dets:        SimpleBayes.Storage.Dets
+    dets: SimpleBayes.Storage.Dets
   }
 
   def init(opts \\ []) do
-    opts = Keyword.merge([
-      model:          model(),
-      storage:        storage(),
-      namespace:      namespace(),
-      file_path:      file_path(),
-      default_weight: default_weight(),
-      smoothing:      smoothing(),
-      stem:           stem(),
-      top:            top(),
-      stop_words:     stop_words()
-    ], opts)
+    opts =
+      Keyword.merge(
+        [
+          model: model(),
+          storage: storage(),
+          namespace: namespace(),
+          file_path: file_path(),
+          default_weight: default_weight(),
+          smoothing: smoothing(),
+          stem: stem(),
+          top: top(),
+          stop_words: stop_words(),
+          table_name: table_name()
+        ],
+        opts
+      )
 
     struct = %SimpleBayes{opts: opts}
 
@@ -54,7 +59,7 @@ defmodule SimpleBayes do
   end
 
   def save(pid) do
-    struct = Agent.get(pid, &(&1))
+    struct = Agent.get(pid, & &1)
 
     @storages[struct.opts[:storage]].save(pid, struct)
   end
@@ -66,16 +71,21 @@ defmodule SimpleBayes do
   end
 
   defdelegate train(pid, category, string, opts \\ []), to: SimpleBayes.Trainer
-  defdelegate classify(pid, string, opts \\ []),        to: SimpleBayes.Classifier
-  defdelegate classify_one(pid, string, opts \\ []),    to: SimpleBayes.Classifier
+  defdelegate classify(pid, string, opts \\ []), to: SimpleBayes.Classifier
+  defdelegate classify_one(pid, string, opts \\ []), to: SimpleBayes.Classifier
 
-  defp model,          do: Application.get_env(:simple_bayes, :model)          || @model
-  defp storage,        do: Application.get_env(:simple_bayes, :storage)        || @storage
-  defp namespace,      do: Application.get_env(:simple_bayes, :namespace)      || @namespace
-  defp file_path,      do: Application.get_env(:simple_bayes, :file_path)      || @file_path
+  defp model, do: Application.get_env(:simple_bayes, :model) || @model
+  defp storage, do: Application.get_env(:simple_bayes, :storage) || @storage
+  defp namespace, do: Application.get_env(:simple_bayes, :namespace) || @namespace
+  defp file_path, do: Application.get_env(:simple_bayes, :file_path) || @file_path
   defp default_weight, do: Application.get_env(:simple_bayes, :default_weight) || @default_weight
-  defp smoothing,      do: Application.get_env(:simple_bayes, :smoothing)      || @smoothing
-  defp stem,           do: Application.get_env(:simple_bayes, :stem)           || @stem
-  defp top,            do: Application.get_env(:simple_bayes, :top)            || @top
-  defp stop_words,     do: Application.get_env(:simple_bayes, :stop_words)     || @stop_words
+  defp smoothing, do: Application.get_env(:simple_bayes, :smoothing) || @smoothing
+  defp stem, do: Application.get_env(:simple_bayes, :stem) || @stem
+  defp top, do: Application.get_env(:simple_bayes, :top) || @top
+  defp stop_words, do: Application.get_env(:simple_bayes, :stop_words) || @stop_words
+
+  defp table_name,
+    do:
+      Application.get_env(:simple_bayes, :table_name) ||
+        Path.basename(file_path()) |> String.to_atom()
 end

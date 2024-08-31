@@ -4,7 +4,7 @@ defmodule SimpleBayes.MapMath do
   @doc """
   Calculates the fraction.
 
-  ## Examples
+  ## Examples
 
       iex> SimpleBayes.MapMath.fraction(
       iex>   %{"nice" => 2, "cute" => 1, "cat" => 1},
