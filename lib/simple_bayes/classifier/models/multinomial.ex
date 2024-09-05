@@ -3,24 +3,28 @@ defmodule SimpleBayes.Classifier.Model.Multinomial do
 
   def probability_of(categories_map, cat_tokens_map, data) do
     likelihood = likelihood_of(categories_map, cat_tokens_map, data)
-    prior      = MapMath.fraction(cat_tokens_map, data.tokens)
+    prior = calculate_prior(cat_tokens_map, data)
 
-    likelihood * prior
+    :math.exp(likelihood + :math.log(prior))
   end
 
   defp likelihood_of(categories_map, cat_tokens_map, data) do
     tokens_map = Map.take(cat_tokens_map, Map.keys(categories_map))
+    vocab_size = map_size(data.tokens)
 
     categories_map
     |> Map.merge(tokens_map)
-    |> values_with_idf(data.tokens_per_training, data.trainings)
-    |> Enum.reduce(1, &(&1 + &2))
-    |> :math.log10()
+    |> Enum.reduce(0, fn {token, count}, acc ->
+      total_count = Accumulator.all(cat_tokens_map)
+      prob = (count + 1) / (total_count + vocab_size)
+      acc + :math.log(prob)
+    end)
   end
 
-  defp values_with_idf(tokens_map, tokens_list, trainings_count) do
-    Enum.map(tokens_map, fn ({token, weight}) ->
-      TfIdf.call(weight, trainings_count, Accumulator.occurance(tokens_list, token))
-    end)
+  defp calculate_prior(cat_tokens_map, data) do
+    cat_docs = Accumulator.all(cat_tokens_map)
+    total_docs = data.trainings
+
+    (cat_docs + 1) / (total_docs + map_size(data.categories))
   end
 end

@@ -6,12 +6,12 @@ defmodule SimpleBayes.Classifier do
   end
 
   def classify(pid, string, opts) do
-    data = Agent.get(pid, &(&1))
+    data = Agent.get(pid, & &1)
     opts = Keyword.merge(data.opts, opts)
 
     data
     |> Probability.for_collection(opts[:model], category_map(string, opts))
-    |> Enum.sort(&(Kernel.elem(&1,1) > Kernel.elem(&2,1)))
+    |> Enum.sort_by(fn {_, score} -> -score end)
     |> take_top(opts[:top])
   end
 
@@ -23,6 +23,7 @@ defmodule SimpleBayes.Classifier do
   end
 
   defp take_top(result, nil), do: result
+
   defp take_top(result, num) when Kernel.is_integer(num) do
     result
     |> Enum.chunk(num)
