@@ -73,6 +73,7 @@ defmodule SimpleBayes do
   defdelegate train(pid, category, string, opts \\ []), to: SimpleBayes.Trainer
   defdelegate classify(pid, string, opts \\ []), to: SimpleBayes.Classifier
   defdelegate classify_one(pid, string, opts \\ []), to: SimpleBayes.Classifier
+  defdelegate classify_with_threshold(pid, string, opts \\ []), to: SimpleBayes.Classifier
 
   defp model, do: Application.get_env(:simple_bayes, :model) || @model
   defp storage, do: Application.get_env(:simple_bayes, :storage) || @storage
